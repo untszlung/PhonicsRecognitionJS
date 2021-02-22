@@ -12,10 +12,10 @@
   <label for="info1">Info</label>
  <input type="checkbox" id="info" name="info" value="true">
 
-    
+
 <div id="label-container"></div>
-<script src="tf.min.js"></script>
-<script src="speech-commands.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@1.3.1/dist/tf.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/speech-commands@0.4.0/dist/speech-commands.min.js"></script>
 
 <script type="text/javascript">
     // more documentation available at
@@ -25,7 +25,7 @@
     const URL = "https://teachablemachine.withgoogle.com/models/ecct1RD7m/";
   //peter single voice data
  //const URL = "https://teachablemachine.withgoogle.com/models/XohwiHdWA/";
-  
+
   let result_history = "";
     let IsRecongnizing = false;
   let refinedPhonicsResults = "-";
@@ -34,7 +34,7 @@
   let phonciesResultCount = 1;
   let recognizer;
   let classLabels;
-  
+
     async function createModel() {
         const checkpointURL = URL + "model.json"; // model topology
         const metadataURL = URL + "metadata.json"; // model metadata
@@ -53,28 +53,28 @@
 
       function setRecognizing(){
       IsRecongnizing = false;
-        
+
           if (refinedPhonicsResultsMap.length > 0){
 
         refinedPhonicsResults = refinedPhonicsResultsMap.sort((a, b) => b[1] - a[1]);
            let label = '[ ';
             for (let i=0; i< 3; i++){
               label = label + `${refinedPhonicsResults[i][0]}(${refinedPhonicsResults[i][1].toFixed(0)})%, `;
-              
+
             }
             label = label + ' ]';
 
               labelContainer.appendChild(document.createElement("div"));
-             
+
                 labelContainer.childNodes[labelContainer.childNodes.length-1].innerHTML = `${phonciesResultCount}:  ` +label ;
-            
-            
-            
+
+
+
             console.log(`${phonciesResultCount}:  ` +label);
             if (document.getElementById("info").checked == true){
               console.log(`----` + result_history);
                 labelContainer.appendChild(document.createElement("div"));
-             
+
                 labelContainer.childNodes[labelContainer.childNodes.length-1].innerHTML = `----` + result_history + '<p>';
             }
             phonciesResultCount++;
@@ -84,19 +84,19 @@
      }
 
     }
-  
+
     function micOn(){
         if(document.getElementById("mic").checked == true){
-         
+
               startListening();
-      
+
         }
         else {
             stopListening();
-      
-        }   
+
+        }
     }
- 
+
     async function init() {
          recognizer = await createModel();
         classLabels = recognizer.wordLabels(); // get class labels
@@ -104,10 +104,10 @@
         // for (let i = 0; i < classLabels.length; i++) {
         //     labelContainer.appendChild(document.createElement("div"));
         // }
-      
+
          document.getElementById("info").checked = false;
       document.getElementById("mic").checked = true;
-      
+
 
         // listen() takes two arguments:
         // 1. A callback function that is invoked anytime a word is recognized.
@@ -117,12 +117,12 @@
         // Stop the recognition in 5 seconds.
         // setTimeout(() => recognizer.stopListening(), 5000);
     }
-  
+
   function startListening(){
      recognizer.listen(result => {
             //const scores = result.scores; // probability of prediction for each class
             // render the probability scores per class
-         
+
           let myMap = [];
           //refinedPhonicsResultsMap = [];
             //set timeout
@@ -135,14 +135,14 @@
             for (let i = 0; i < classLabels.length; i++) {
                 const classPrediction = classLabels[i] + ": " + result.scores[i].toFixed(2);
 //               labelContainer.appendChild(document.createElement("div"));
-             
+
 //                 labelContainer.childNodes[labelContainer.childNodes.length-1].innerHTML = classPrediction;
-             
+
                   myMap.push([classLabels[i],result.scores[i].toFixed(2)*100]);
             }
           const phonicsResults = myMap.sort((a, b) => b[1] - a[1]);
 
-          
+
             let    label = '[';
             for (let i=0; i< 3; i++){
               label = label + `${phonicsResults[i][0]}(${phonicsResults[i][1].toFixed(0)})%, `;
@@ -153,10 +153,10 @@
             }
             label = label + ']';
 
-          
+
              if (phonicsResults[0][0]  != 'Background Noise') {
                   result_history = result_history + label + ' ';
-            
+
             }
 
             //console.log(phonicsResults);
@@ -166,13 +166,13 @@
             invokeCallbackOnNoiseAndUnknown: false,
             overlapFactor: 0.9 // probably want between 0.5 and 0.75. More info in README
         });
-    
+
   }
-  
+
   function stopListening(){
     recognizer.stopListening();
   }
 </script>
-  
+
 
 </body></html>
