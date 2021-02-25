@@ -169,7 +169,7 @@
             label = label + ']';
             
        if ((phonicsResults[0][0]  != 'Background Noise') && (phonicsResults[0][0]  != 'unknown')) {
-                 result_history = result_history + label + ' ';
+                 result_history = result_history + label + '<br>';
             
             }
           
@@ -182,7 +182,7 @@
            else{
              if ( phonicsResults[0][0] == 'Background Noise') {
               if (result_history !=''){
-                result_history = phonciesResultCount + ": " + result_history;
+                result_history = phonciesResultCount + ":<br>" + result_history;
                console.log(result_history);
                    labelContainer.appendChild(document.createElement("div"));
              
