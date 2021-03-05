@@ -1,265 +1,339 @@
-<!DOCTYPE html><html lang="en"><head>
+<!DOCTYPE html>
+<html lang="en">
 
-    <link rel="stylesheet" type="text/css" href="style.css">
-    <meta charset="utf-8">
+<head>
 
-  </head>
-  <body>
-   <div>Phonices Recogniztion Demo</div>
-<button type="button" onclick="init()">Start</button><br>
-    <div id="label-container"></div>
-<label for="mic1"> Mic on</label>
- <input type="checkbox" onclick="micOn()" id="mic" name="mic" value="true"><br>
+  <link rel="stylesheet" type="text/css" href="style.css">
+  <meta charset="utf-8" />
+
+</head>
+
+<body>
+  <div>Phonices Recogniztion Demo</div>
+  <button type="button" onclick="init()">Start</button><br>
+  <div id="label-container"></div>
+  <label for="mic1"> Mic on</label>
+  <input type="checkbox" onclick="micOn()" id="mic" name="mic" value="true"><br>
   <label for="info1">Result details</label>
- <input type="checkbox" id="info" name="info" value="true">
+  <input type="checkbox" id="info" name="info" value="true">
 
-    
 
-<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@1.3.1/dist/tf.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/speech-commands@0.4.0/dist/speech-commands.min.js"></script>
 
-<script type="text/javascript">
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@1.3.1/dist/tf.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/speech-commands@0.4.0/dist/speech-commands.min.js"></script>
+
+  <script type="text/javascript">
     // more documentation available at
     // https://github.com/tensorflow/tfjs-models/tree/master/speech-commands
 
     // 4 speakers training data
-   // const URL = "https://teachablemachine.withgoogle.com/models/ecct1RD7m/";
-  
-  // 3 speakers training data
-  const URL = "https://teachablemachine.withgoogle.com/models/E1cMzu4nQ/";
-  
-  //peter single voice data
- //const URL = "https://teachablemachine.withgoogle.com/models/XohwiHdWA/";
-  
-  let result_history = "";
-  let IsRecongnizing = false;
-  let refinedPhonicsResults = "-";
-  let refinedPhonicsResultsMap = [];
-  let accuminatedPhonicsResults= [];
-  let labelContainer;
-  let phonciesResultCount = 1;
-  let recognizer;
-  let classLabels;
-  let PreviewPhonicsResult ='';
-  
+    // const URL = "https://teachablemachine.withgoogle.com/models/ecct1RD7m/";
+
+    // 3 speakers training data
+    const URL = "https://teachablemachine.withgoogle.com/models/E1cMzu4nQ/";
+
+    //peter single voice data
+    //const URL = "https://teachablemachine.withgoogle.com/models/XohwiHdWA/";
+
+    let result_history = "";
+    let IsRecongnizing = false;
+    let refinedPhonicsResults = "-";
+    let refinedPhonicsResultsMap = [];
+    let accuminatedPhonicsResults = [];
+    let labelContainer;
+    let phonciesResultCount = 1;
+    let recognizer;
+    let classLabels;
+    let PreviewPhonicsResult = '';
+
     async function createModel() {
-        const checkpointURL = URL + "model.json"; // model topology
-        const metadataURL = URL + "metadata.json"; // model metadata
+      const checkpointURL = URL + "model.json"; // model topology
+      const metadataURL = URL + "metadata.json"; // model metadata
 
-        const recognizer = speechCommands.create(
-            "BROWSER_FFT", // fourier transform type, not useful to change
-            undefined, // speech commands vocabulary feature, not useful for your models
-            checkpointURL,
-            metadataURL);
+      const recognizer = speechCommands.create(
+        "BROWSER_FFT", // fourier transform type, not useful to change
+        undefined, // speech commands vocabulary feature, not useful for your models
+        checkpointURL,
+        metadataURL);
 
-        // check that model and metadata are loaded via HTTPS requests.
-        await recognizer.ensureModelLoaded();
+      // check that model and metadata are loaded via HTTPS requests.
+      await recognizer.ensureModelLoaded();
 
-        return recognizer;
+      return recognizer;
     }
-      
-      function setRecognizing(){
-      IsRecongnizing = false;
-        
-          if (refinedPhonicsResultsMap.length > 0){
 
-        refinedPhonicsResults = refinedPhonicsResultsMap.sort((a, b) => b[1] - a[1]);
-           let label = '[ ';
-            for (let i=0; i< 3; i++){
-              label = label + `${refinedPhonicsResults[i][0]} (${refinedPhonicsResults[i][1].toFixed(0)})%, `;
-              
-            }
-            label = label + ' ]';
-
-              labelContainer.appendChild(document.createElement("div"));
-             
-                labelContainer.childNodes[labelContainer.childNodes.length-1].innerHTML = `${phonciesResultCount}:  ` +label + '<p>';
-            
-            
-            
-            console.log(`${phonciesResultCount}:  ` +label);
-            if (document.getElementById("info").checked == true){
-              console.log(`----` + result_history);
-                labelContainer.appendChild(document.createElement("div"));
-             
-                labelContainer.childNodes[labelContainer.childNodes.length-1].innerHTML = `----` + result_history + '<p>';
-         
-            }
-                   var elmnt = document.getElementById("info");
-  elmnt.scrollIntoView(false);
-            phonciesResultCount++;
-        result_history = '';
-        refinedPhonicsResults = '-';
-        refinedPhonicsResultsMap = [];
-     }
-
-    }
   
-    function micOn(){
-        if(document.getElementById("mic").checked == true){
-         
-              startListening();
-              console.log('start listening');
-        }
-        else {
-            stopListening();
-            console.log('stop listening');
-      
-        }   
+
+    function micOn() {
+      if (document.getElementById("mic").checked == true) {
+
+        startListening();
+        console.log('start listening');
+      } else {
+        stopListening();
+        console.log('stop listening');
+
+      }
     }
- 
+
+    
+    
     async function init() {
-         recognizer = await createModel();
-        classLabels = recognizer.wordLabels(); // get class labels
+      recognizer = await createModel();
+      classLabels = recognizer.wordLabels(); // get class labels
       //console.log(recognizer.modelInputShape());
 
 
-        labelContainer = document.getElementById("label-container");
-        // for (let i = 0; i < classLabels.length; i++) {
-        //     labelContainer.appendChild(document.createElement("div"));
-        // }
-      
-         document.getElementById("info").checked = false;
+      labelContainer = document.getElementById("label-container");
+      // for (let i = 0; i < classLabels.length; i++) {
+      //     labelContainer.appendChild(document.createElement("div"));
+      // }
+
+      document.getElementById("info").checked = false;
       document.getElementById("mic").checked = true;
-      
 
-        // listen() takes two arguments:
-        // 1. A callback function that is invoked anytime a word is recognized.
-        // 2. A configuration object with adjustable fields
-       startListening();
 
-        // Stop the recognition in 5 seconds.
-        // setTimeout(() => recognizer.stopListening(), 5000);
+      // listen() takes two arguments:
+      // 1. A callback function that is invoked anytime a word is recognized.
+      // 2. A configuration object with adjustable fields
+      startListening();
+
+      // Stop the recognition in 5 seconds.
+      // setTimeout(() => recognizer.stopListening(), 5000);
     }
-  
-  function startListening(){
-     recognizer.listen(result => {
-            //const scores = result.scores; // probability of prediction for each class
-            // render the probability scores per class
-         
+    
+    function sortPhonicsResult(InputPhonicsResults,phonicsResultsSamplingWindowSize){
+       // sample the phoncis results by sliding windows
+     // let phonicsResultsSamplingWindowSize = 1;
+      let accuminatedPhonicsResultThershold = 3;
+      let offset=0;
+      let tempphonicsResultsCount = 1;
+      let OutputPhonicsResult = [];
+      
+      if(InputPhonicsResults.length >= phonicsResultsSamplingWindowSize * 3){ 
+      //count all recongized phonics result by sliding windows
+        for (let j = 0; j <= ((InputPhonicsResults.length - phonicsResultsSamplingWindowSize*3)); j=j+3) {
+                  //let countPhonicsResultList = [];
+                  let tempphonicsResults = [];
+                  for (let k=0; k<phonicsResultsSamplingWindowSize*3 ; k++){
+                    let isResultExist = false;
+                    
+                    // count the recongized phonices result
+                    for (let i = 0; i<tempphonicsResults.length; i++) {
+                 
+                      
+                      //if the result already exist , compare and update highet confident score
+                      if (tempphonicsResults[i][0] == InputPhonicsResults[k+offset][0]) {
+                        //console.log(`-${tempphonicsResults[i][0]}${tempphonicsResults[i][1]}   == ${InputPhonicsResults[k+offset][0]}${InputPhonicsResults[k+offset][1]} k:${k} offset:${offset} tempphonicsResults: ${tempphonicsResults}`);  
+                        if (InputPhonicsResults[k+offset][1] - tempphonicsResults[i][1] > 0) {
+                 
+                          //console.log(`--${tempphonicsResults[i][0]}${tempphonicsResults[i][1]}   == ${InputPhonicsResults[k+offset][0]}${InputPhonicsResults[k+offset][1]} k:${k} offset:${offset} tempphonicsResults: ${tempphonicsResults}`);         
+                          tempphonicsResults[i][1] = InputPhonicsResults[k+offset][1];
+                      
+                        }
+                        tempphonicsResults[i][2]++;
+                        isResultExist = true;
+                        break;
+
+                      }
+                    }
+                    
+                      //add to a phonics result if it doesn't exist
+                    if (isResultExist == false) {
+                     // console.log(`InputPhonicsResults[k+offset][0]:${InputPhonicsResults[k+offset][0]} k:${k} offset:${offset}`);
+                      
+                      tempphonicsResults.push([InputPhonicsResults[k+offset][0], InputPhonicsResults[k+offset][1],1]);
+                    }
+                  }
+                  
+                  //sort the count of phonics result
+                  const sortedTempPhonicsResults = tempphonicsResults.sort((a, b) => b[2] - a[2]);
+                  
+                  OutputPhonicsResult = sortedTempPhonicsResults;
+                  let sortedTop3TempPhonicsResults = '';
+                  
+                  //Get the top 3 confident score result
+                  for (let m=0; m<3 ; m++){
+                       sortedTop3TempPhonicsResults = sortedTop3TempPhonicsResults + `${sortedTempPhonicsResults[m][0]}(${sortedTempPhonicsResults[m][1]}%)(${sortedTempPhonicsResults[m][2]}), `;
+                  }
+                  console.log(`${tempphonicsResultsCount}. ${sortedTop3TempPhonicsResults}`);
+                  tempphonicsResultsCount++;
+                  offset = offset + 3;
+                }
+      }
+      
+      //console.log(`OutputPhonicsResult.length: ${OutputPhonicsResult.length}`);
+      return OutputPhonicsResult;
+    }
+
+    function startListening() {
+      recognizer.listen(result => {
+          //const scores = result.scores; // probability of prediction for each class
+          // render the probability scores per class
+
           let myMap = [];
           //refinedPhonicsResultsMap = [];
-//             //set timeout
-//             if (IsRecongnizing == false){
-//               setTimeout(setRecognizing, 1000)
-//               IsRecongnizing = true;
+          //             //set timeout
+          //             if (IsRecongnizing == false){
+          //               setTimeout(setRecognizing, 1000)
+          //               IsRecongnizing = true;
 
-//             }
+          //             }
 
-            for (let i = 0; i < classLabels.length; i++) {
-                const classPrediction = classLabels[i] + ": " + result.scores[i].toFixed(2);
-//               labelContainer.appendChild(document.createElement("div"));
-             
-//                 labelContainer.childNodes[labelContainer.childNodes.length-1].innerHTML = classPrediction;
-             
-                  myMap.push([classLabels[i],result.scores[i].toFixed(2)*100]);
-            }
+          //Sort the recognized result
+          for (let i = 0; i < classLabels.length; i++) {
+            const classPrediction = classLabels[i] + ": " + result.scores[i].toFixed(2);
+            //               labelContainer.appendChild(document.createElement("div"));
+
+            //                 labelContainer.childNodes[labelContainer.childNodes.length-1].innerHTML = classPrediction;
+
+            myMap.push([classLabels[i], result.scores[i].toFixed(2) * 100]);
+          }
           const phonicsResults = myMap.sort((a, b) => b[1] - a[1]);
 
-           
-          
-            let    label = '[';
-            for (let i=0; i< 3; i++){
-              label = label + `${phonicsResults[i][0]}(${phonicsResults[i][1].toFixed(0)})%, `;
-               if ((phonicsResults[0][0]  != 'Background Noise') && (phonicsResults[0][0]  != 'unknown')){
-                  refinedPhonicsResultsMap.push([phonicsResults[i][0],phonicsResults[i][1]]);
-                 
-                   if (i==0){
-                     let newPhonicsResult = true;
-                     for (let j = 0; j < accuminatedPhonicsResults.length; j++) {
-                       if (accuminatedPhonicsResults[j][0] == phonicsResults[i][0]){
-                         if (accuminatedPhonicsResults[j][1] < phonicsResults[i][1]){
-                           accuminatedPhonicsResults[j][1] = phonicsResults[i][1];
-                         }
-                         accuminatedPhonicsResults[j][2]++;
-                         newPhonicsResult = false;
-                       }
-                     }
-
-                     if (newPhonicsResult == true){
-                       accuminatedPhonicsResults.push([phonicsResults[i][0],"(" + phonicsResults[i][1].toFixed(0)+"%)",1]);
-                     }
-                 
-                   }
-                  //console.log(i + ': ' + refinedPhonicsResultsMap);
-               }
-            }
-            label = label + ']';
-            
-       if ((phonicsResults[0][0]  != 'Background Noise') && (phonicsResults[0][0]  != 'unknown')) {
-                 result_history = result_history + label + '<br>';
-            
-            }
-          
-           if (IsRecongnizing == false){ 
-             if(( PreviewPhonicsResult == 'Background Noise') && (phonicsResults[0][0] != 'Background Noise')){
-               IsRecongnizing = true;
-             }
-           
-           }
-           else{
-             if ( phonicsResults[0][0] == 'Background Noise') {
-              if (result_history !=''){
-                //result_history = phonciesResultCount + ":<br>" + result_history;
-               console.log(result_history);
-                
-                let accuminatedPhonicsResult = "";
-                let IsAccuminatedPhonicsResultValid = false;
-                accuminatedPhonicsResult = `${phonciesResultCount}. Result: `;
-                for (let j = 0; j < accuminatedPhonicsResults.length; j++) {
-                    if(accuminatedPhonicsResults[j][2] > 2){
-                      accuminatedPhonicsResult = accuminatedPhonicsResult + `${accuminatedPhonicsResults[j][0]} ${accuminatedPhonicsResults[j][1]}  (${accuminatedPhonicsResults[j][2]}), `;
-                      IsAccuminatedPhonicsResultValid = true;
-                    }
-                
-                }
-              
-                if (IsAccuminatedPhonicsResultValid == true){
-                  labelContainer.appendChild(document.createElement("div"));
-                  labelContainer.childNodes[labelContainer.childNodes.length-1].innerHTML = accuminatedPhonicsResult + '<p>';
-                    console.log(accuminatedPhonicsResults);
-
-        
-                  phonciesResultCount++;
-                }
-                
-                    labelContainer.appendChild(document.createElement("div"));
-
-                  labelContainer.childNodes[labelContainer.childNodes.length-1].innerHTML = result_history + '<p>';
 
 
-                  var elmnt = document.getElementById("info");
-                  elmnt.scrollIntoView(false);
-              }
-                      
-               result_history = '';
-                IsRecongnizing = false;
+          let label = '[';
+          for (let i = 0; i < 3; i++) {
+            label = label + `${phonicsResults[i][0]}(${phonicsResults[i][1].toFixed(0)})%, `;
+            if ((phonicsResults[0][0] != 'Background Noise') && (phonicsResults[0][0] != 'unknown')) {
              
-               accuminatedPhonicsResults= [];
-             }
-            
-           }
-       
-       PreviewPhonicsResult = phonicsResults[0][0];
-            // if (phonicsResults[0][0]  != 'Background Noise') {
-                //  result_history = result_history + label + ' ';
-            
-            //}
 
-            //console.log(result_history);
+
+              accuminatedPhonicsResults.push([phonicsResults[i][0], phonicsResults[i][1].toFixed(0)]);
+              //console.log('accuminatedPhonicsResults: ' + accuminatedPhonicsResults);
+            
+            //console.log(i + ': ' + refinedPhonicsResultsMap);
+          }
+        }
+        label = label + ']';
+
+
+
+        if ((phonicsResults[0][0] != 'Background Noise') && (phonicsResults[0][0] != 'unknown')) {
+          result_history = result_history + label + '<br>';
+
+        }
+
+
+        // check ending point of the utterance
+        if (IsRecongnizing == false) {
+          if ((PreviewPhonicsResult == 'Background Noise') && (phonicsResults[0][0] != 'Background Noise')) {
+            IsRecongnizing = true;
+          }
+
+        } else {
+          if (phonicsResults[0][0] == 'Background Noise') {
+            if (result_history != '') {
+   
+              console.log('accuminatedPhonicsResults.length: ' + accuminatedPhonicsResults.length/3);
+              //if(accuminatedPhonicsResults.length >= phonicsResultsSamplingWindowSize * 3){
+                //let countPhonicsResultList = [];
+               
+              let sortPhonicsResultList = [];
+              let sortTopPhonicsResultList = [];
+              
+              //sorted the phonics result
+              sortPhonicsResultList = sortPhonicsResult(accuminatedPhonicsResults,accuminatedPhonicsResults.length/3);
+              //console.log(`sortPhonicsResultList: ${sortPhonicsResultList}`);
+              let sortPhonicsResults = ""
+              
+              //console.log('sortPhonicsResultList.length: ' + sortPhonicsResultList.length);
+              
+         
+              
+              
+              for(let i=0; i<sortPhonicsResultList.length; i++){
+                if ((sortPhonicsResultList[i][2] >= 5) && ((sortPhonicsResultList[i][0] != 'Background Noise') && (sortPhonicsResultList[i][0] != 'unknown'))) {
+               // sortPhonicsResults = sortPhonicsResults + `${sortPhonicsResultList[i][0]}(${sortPhonicsResultList[i][1]}%)(${sortPhonicsResultList[i][2]}), `;
+                  sortTopPhonicsResultList.push([sortPhonicsResultList[i][0],sortPhonicsResultList[i][1],sortPhonicsResultList[i][2]]);
+                }
+              }
+              
+              sortTopPhonicsResultList = sortTopPhonicsResultList.sort((a, b) => b[1] - a[1]);
+              
+              //show finalize result, 
+              let sortTopPhonicsResults = "";
+              let maxTopKPhonicsResultCount;
+                  if (sortTopPhonicsResultList.length > 6){
+                maxTopKPhonicsResultCount = 6;
+              }
+              else{
+                maxTopKPhonicsResultCount = sortTopPhonicsResultList.length;
+              }
+              for(let i=0; i<maxTopKPhonicsResultCount; i++){
+                //if (sortTopPhonicsResultList[i][2] >= 3){
+                sortTopPhonicsResults = sortTopPhonicsResults + `${sortTopPhonicsResultList[i][0]}(${sortTopPhonicsResultList[i][1]}%)(${sortTopPhonicsResultList[i][2]}),   `;
+               
+                //}
+              }
+              
+         
+              if(maxTopKPhonicsResultCount > 0){
+                  sortTopPhonicsResults = `${phonciesResultCount}: ${sortTopPhonicsResults}`; 
+                phonciesResultCount++;
+               console.log(`sortTopPhonicsResults: ${sortTopPhonicsResults}`)
+              labelContainer.appendChild(document.createElement("div"));
+              labelContainer.childNodes[labelContainer.childNodes.length - 1].innerHTML = `<h3>` + sortTopPhonicsResults + '</h3><p>'
+              }
+              
+   
+              if (document.getElementById("info").checked == true) {
+              
+                //show a results by counting and sorting of recognized phonics
+                     for(let i=0; i<sortPhonicsResultList.length; i++){
+                  sortPhonicsResults = sortPhonicsResults + `${sortPhonicsResultList[i][0]}(${sortPhonicsResultList[i][1]}%)(${sortPhonicsResultList[i][2]}), `;
+                }
+                 console.log(`sortPhonicsResults: ${sortPhonicsResults}`);
+                labelContainer.appendChild(document.createElement("div"));
+                labelContainer.childNodes[labelContainer.childNodes.length - 1].innerHTML = '-- sorted phonics results --<br>';
+                labelContainer.appendChild(document.createElement("div"));
+                labelContainer.childNodes[labelContainer.childNodes.length - 1].innerHTML = sortPhonicsResults + '<br><br>'
+
+                //sortPhonicsResults = '-';
+
+                //show all capture results
+                console.log("result history:" + result_history);
+                labelContainer.appendChild(document.createElement("div"));
+                labelContainer.childNodes[labelContainer.childNodes.length - 1].innerHTML = '-- raw phonics results --<br>';
+                labelContainer.appendChild(document.createElement("div"));
+                labelContainer.childNodes[labelContainer.childNodes.length - 1].innerHTML = result_history + '<br>';
+              }
+              //scroll the page to bottom
+              var elmnt = document.getElementById("info");
+              elmnt.scrollIntoView(false);
+
+              result_history = '';
+              IsRecongnizing = false;
+
+              accuminatedPhonicsResults = [];
+            }
+
+            
+          }
+
+        }
+
+        PreviewPhonicsResult = phonicsResults[0][0];
+          // if (phonicsResults[0][0]  != 'Background Noise') {
+          //  result_history = result_history + label + ' ';
+
+          //}
+
+          //console.log(result_history);
         }, {
-            includeSpectrogram: true, // in case listen should return result.spectrogram
-            probabilityThreshold: 0.20,
-            invokeCallbackOnNoiseAndUnknown: false,
-            overlapFactor: 0.85 // probably want between 0.5 and 0.75. More info in README
+          includeSpectrogram: true, // in case listen should return result.spectrogram
+          probabilityThreshold: 0.20,
+          invokeCallbackOnNoiseAndUnknown: false,
+          overlapFactor: 0.95 // probably want between 0.5 and 0.75. More info in README
         });
-    
-  }
-  
-  function stopListening(){
-    recognizer.stopListening();
-  }
-</script>
-  
 
-</body></html>
+    }
+
+    function stopListening() {
+      recognizer.stopListening();
+    }
+  </script>
+</body>
+
+</html>
