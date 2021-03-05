@@ -13,9 +13,11 @@
   <button type="button" onclick="init()">Start</button><br>
   <div id="label-container"></div>
   <label for="mic1"> Mic on</label>
-  <input type="checkbox" onclick="micOn()" id="mic" name="mic" value="true"><br>
-  <label for="info1">Result details</label>
-  <input type="checkbox" id="info" name="info" value="true">
+  <input type="checkbox" onclick="micOn()" id="mic" name="mic" value="true">
+  <label for="info1">Digested Results</label>
+  <input type="checkbox" id="digestedResults" name="digestedResults" value="true">
+  <label for="info2">Raw Results</label>
+  <input type="checkbox" id="rawResults" name="rawResults" value="true">
 
 
 
@@ -88,8 +90,8 @@
       // for (let i = 0; i < classLabels.length; i++) {
       //     labelContainer.appendChild(document.createElement("div"));
       // }
-
-      document.getElementById("info").checked = false;
+      document.getElementById("digestedResults").checked = false;
+      document.getElementById("rawResults").checked = false;
       document.getElementById("mic").checked = true;
 
 
@@ -276,9 +278,9 @@
               labelContainer.appendChild(document.createElement("div"));
               labelContainer.childNodes[labelContainer.childNodes.length - 1].innerHTML = `<h3>` + sortTopPhonicsResults + '</h3><p>'
               }
-              
+           
    
-              if (document.getElementById("info").checked == true) {
+              if (document.getElementById("digestedResults").checked == true) {
               
                 //show a results by counting and sorting of recognized phonics
                      for(let i=0; i<sortPhonicsResultList.length; i++){
@@ -289,9 +291,9 @@
                 labelContainer.childNodes[labelContainer.childNodes.length - 1].innerHTML = '-- sorted phonics results --<br>';
                 labelContainer.appendChild(document.createElement("div"));
                 labelContainer.childNodes[labelContainer.childNodes.length - 1].innerHTML = sortPhonicsResults + '<br><br>'
-
+              }
                 //sortPhonicsResults = '-';
-
+              if (document.getElementById("rawResults").checked == true) {
                 //show all capture results
                 console.log("result history:" + result_history);
                 labelContainer.appendChild(document.createElement("div"));
@@ -300,7 +302,7 @@
                 labelContainer.childNodes[labelContainer.childNodes.length - 1].innerHTML = result_history + '<br>';
               }
               //scroll the page to bottom
-              var elmnt = document.getElementById("info");
+              var elmnt = document.getElementById("rawResults");
               elmnt.scrollIntoView(false);
 
               result_history = '';
